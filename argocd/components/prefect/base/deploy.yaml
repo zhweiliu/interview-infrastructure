@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: COMPONENT_NAME
+spec:
+  # 您可以根據負載調整 replicas 數量
+  replicas: 1 
+  template:
+    spec:
+      containers:
+      - name: COMPONENT_NAME
+        # 使用您指定的 Prefect 3 映像檔
+        image: IMAGE_NAME
+        # 將 Docker CMD/Entrypoint 轉換為 Kubernetes command/args
+        command: ["prefect"]
+        args: ["server", "start", "--host", "0.0.0.0"]
+        ports:
+        # 容器內部暴露的 port
+        - containerPort: 4200 
+          name: http-api
+        # 推薦配置資源限制，防止單一 Pod 佔用過多資源
+        # resources:
+        #   limits:
+        #     memory: "1Gi"
+        #     cpu: "500m"
+        #   requests:
+        #     memory: "512Mi"
+        #     cpu: "250m"
+        
+        # Prefect Server 通常需要一個外部的 PostgreSQL 或 SQLite (僅限單一實例)
+        # 如果您沒有配置外部資料庫，它會使用內建的 SQLite，這不適合生產環境
+        # 如果使用外部資料庫，請添加環境變量，例如：
+        # env:
+        # - name: PREFECT_API_DATABASE_CONNECTION_URL
+        #   value: "postgresql+asyncpg://user:password@host:port/database"
