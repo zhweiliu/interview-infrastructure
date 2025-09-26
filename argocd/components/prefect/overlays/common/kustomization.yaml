@@ -17,6 +17,12 @@ patches:
         path: /metadata/name
         value: prefect-server
       - op: replace
+        path: /spec/selector/matchLabels/app
+        value: prefect-server
+      - op: replace
+        path: /spec/template/metadata/labels/app
+        value: prefect-server
+      - op: replace
         path: /spec/template/spec/containers/0/name
         value: prefect-server
   - target:
