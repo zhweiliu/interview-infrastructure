@@ -9,16 +9,16 @@ spec:
       repoURL: https://github.com/zhweiliu/interview-infrastructure.git
       revision: main
       directories:
-      - path: infrastructures/*
+      - path: argocd/clusters/apps/*
   template:
     metadata:
-      name: 'infra-{{path.basename}}'
+      name: 'app-{{path.basename}}'
     spec:
       project: "default"
       source:
         repoURL: https://github.com/zhweiliu/interview-infrastructure.git
         targetRevision: main
-        path: infrastructures/{{path.basename}}
+        path: argocd/clusters/apps/{{path.basename}}
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{path.basename}}'
