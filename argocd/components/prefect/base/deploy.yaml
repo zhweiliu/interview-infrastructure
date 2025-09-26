@@ -5,7 +5,13 @@ metadata:
 spec:
   # 您可以根據負載調整 replicas 數量
   replicas: 1 
+  selector:
+    matchLabels:
+      app: COMPONENT_NAME
   template:
+    metadata:
+      labels:
+        app: COMPONENT_NAME
     spec:
       containers:
       - name: COMPONENT_NAME
