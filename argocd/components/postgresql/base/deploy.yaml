@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: COMPONENT_NAME
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: COMPONENT_NAME
+  template:
+    metadata:
+      labels:
+        app: COMPONENT_NAME
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - postgresql
+              topologyKey: "kubernetes.io/hostname"
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: cloud.google.com/gke-nodepool
+                    operator: In
+                    values:
+                      - postgresql
+      containers:
+      - name: COMPONENT_NAME
+        image: IMAGE_NAME
+        ports:
+        - containerPort: 5432

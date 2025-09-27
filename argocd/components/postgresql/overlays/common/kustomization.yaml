@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+labels:
+  - pairs:
+      app: postgresql
+
+patches:
+  - target:
+      kind: Deployment
+      name: COMPONENT_NAME
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: postgresql
+      - op: replace
+        path: /spec/selector/matchLabels/app
+        value: postgresql
+      - op: replace
+        path: /spec/template/metadata/labels/app
+        value: postgresql
+      - op: replace
+        path: /spec/template/spec/containers/0/name
+        value: postgresql
+  - target:
+      kind: Service
+      name: COMPONENT_NAME
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: postgresql
+      - op: replace
+        path: /spec/selector/app
+        value: postgresql
+  - target:
+      kind: PersistentVolumeClaim
+      name: COMPONENT_NAME
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: postgresql
