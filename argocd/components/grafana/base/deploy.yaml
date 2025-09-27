@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: COMPONENT_NAME
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: COMPONENT_NAME
+  template:
+    metadata:
+      labels:
+        app: COMPONENT_NAME
+    spec:
+      containers:
+      - name: COMPONENT_NAME
+        image: IMAGE_NAME
+        ports:
+        - containerPort: 3000
+        # 如果需要，可以在這裡設定 admin 帳號密碼
+        # env:
+        # - name: GF_SECURITY_ADMIN_USER
+        #   value: "admin"
+        # - name: GF_SECURITY_ADMIN_PASSWORD
+        #   value: "YourGrafanaPassword"
