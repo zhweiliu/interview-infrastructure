@@ -17,7 +17,7 @@ patches:
       name: COMPONENT_NAME
     patch: |-
       - op: add
-        path: /spec/serviceAccountName
+        path: /spec/template/spec/serviceAccountName
         value: postgres-sa
       - op: add
         path: /spec/template/spec/containers/0/envFrom
