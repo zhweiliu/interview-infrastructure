@@ -216,7 +216,7 @@ altinity-clickhouse-operator:
           # IMPORTANT
           # Regexp is applicable.
           #namespaces: ["dev", "test"]
-          namespaces: ["clickhouse-operator","clickhouse","clickhouse-keeper"]
+          namespaces: ["clickhouse-operator","database","clickhouse-keeper"]
         clickhouse:
           configuration:
             ################################################
