@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../../components/metabase/overlays/common
+  - secret.yaml
+  - service_account.yaml
+
+images:
+  - name: IMAGE_NAME
+    newName: metabase/metabase
+    newTag: "v0.56.x"
+
+patches:
+  - target:
+      kind: Deployment
+      name: COMPONENT_NAME
+    patch: |-
+      - op: add
+        path: /spec/template/spec/serviceAccountName
+        value: metabase-sa
+      - op: add
+        path: /spec/template/spec/containers/0/envFrom
+        value:
+        - secretRef:
+            name: metabase

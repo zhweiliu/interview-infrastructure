@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+labels:
+  - pairs:
+      app: metabase
+
+patches:
+  - target:
+      kind: Deployment
+      name: COMPONENT_NAME
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: metabase
+      - op: replace
+        path: /spec/selector/matchLabels/app
+        value: metabase
+      - op: replace
+        path: /spec/template/metadata/labels/app
+        value: metabase
+      - op: replace
+        path: /spec/template/spec/containers/0/name
+        value: metabase
+  - target:
+      kind: Service
+      name: COMPONENT_NAME
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: metabase
+      - op: replace
+        path: /spec/selector/app
+        value: metabase
