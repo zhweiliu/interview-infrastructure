@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../../components/postgresql/overlays/common
+  - ../../../../components/postgresql/overlays/common
   - secret.yaml
   - service_account.yaml
 

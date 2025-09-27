@@ -3,7 +3,7 @@ kind: Kustomization
 
 resources:
   - secrets.yaml
-  - ../../../components/clickhouse/overlays/common
+  - ../../../../components/clickhouse/overlays/common
   - storage-class.yaml
 
 images:
