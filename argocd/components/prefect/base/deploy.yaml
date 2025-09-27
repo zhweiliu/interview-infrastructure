@@ -13,6 +13,26 @@ spec:
       labels:
         app: COMPONENT_NAME
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - prefect
+              topologyKey: "kubernetes.io/hostname"
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: cloud.google.com/gke-nodepool
+                    operator: In
+                    values:
+                      - prefect
       containers:
       - name: COMPONENT_NAME
         # 使用您指定的 Prefect 3 映像檔
