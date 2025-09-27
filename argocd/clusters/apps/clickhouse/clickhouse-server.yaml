@@ -1,0 +1,98 @@
+- op: add
+  path: /spec/taskID
+  value: standard-cluster
+
+- op: add
+  path: /spec/configuration/users
+  value:
+    admin/k8s_secret_password: clickhouse/chi-users/ADMIN
+    admin/profile: admin
+    admin/quota: default
+    admin/access_management: 1
+    admin/named_collection_control: 1
+    admin/networks/ip:
+     - ::1
+     - 127.0.0.1/32
+     - 172.0.0.0/8
+     - 10.0.0.0/8
+    grafana/k8s_secret_password: clickhouse/chi-users/GRAFANA
+    grafana/profile: default
+    grafana/quota: default
+    grafana/networks/ip:
+     - ::1
+     - 127.0.0.1/32
+     - 172.0.0.0/8
+     - 10.0.0.0/8
+    operator/k8s_secret_password: clickhouse/chi-users/OPERATOR
+    operator/profile: default
+    operator/quota: default
+    operator/networks/ip:
+     - ::1
+     - 127.0.0.1/32
+     - 172.0.0.0/8
+     - 10.0.0.0/8
+    prefect/k8s_secret_password: clickhouse/chi-users/PREFECT
+    prefect/profile: default
+    prefect/quota: default
+    prefect/networks/ip:
+     - ::1
+     - 127.0.0.1/32
+     - 172.0.0.0/8
+     - 10.0.0.0/8
+
+- op: add
+  path: /spec/configuration/profiles
+  value:
+    admin/os_thread_priority: 2
+    admin/log_queries: 1
+    admin/async_insert: 1
+    admin/wait_for_async_insert: 1
+    admin/async_insert_deduplicate: 1
+    admin/distributed_product_mode: global
+    default/os_thread_priority: 4
+    default/log_queries: 1
+    default/async_insert: 1
+    default/wait_for_async_insert: 1
+    default/async_insert_deduplicate: 1
+
+- op: add
+  path: /spec/configuration/settings
+  value:
+    max_connections: 10240
+    distributed_ddl/path: /etc/clickhouse-server/new_task_queue/ddl
+
+- op: replace
+  path: /spec/configuration/clusters/0/templates/dataVolumeClaimTemplate
+  value: ""
+
+- op: add
+  path: /spec/templates/volumeClaimTemplates
+  value:
+    - name: chi-standard-0-0
+      spec:
+        storageClassName: chi-data
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        reclaimPolicy: Retain
+        
+- op: replace
+  path: /spec/configuration/clusters/0/layout
+  value:
+    shards:
+      - name: shard-0
+        replicasCount: 1
+        templates:
+          dataVolumeClaimTemplate: chi-standard-0-0
+
+- op: replace
+  path: /spec/templates/podTemplates/0/spec/containers/0/resources
+  value:
+    limit:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi

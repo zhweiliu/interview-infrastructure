@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - secrets.yaml
+  - ../../../components/clickhouse/overlays/common
+  - storage-class.yaml
+
+images:
+  - name: image-name
+    newName: clickhouse/clickhouse-server
+    newTag: "23.9"
+
+patches:
+  - target:
+      kind: "ClickHouseInstallation"
+      name: chi
+    path: clickhouse-server.yaml
