@@ -3,8 +3,24 @@ kind: Kustomization
 
 resources:
   - ../../../components/prefect/overlays/common
+  - secret.yaml
+  - service_account.yaml
 
 images:
   - name: IMAGE_NAME
     newName: prefecthq/prefect
     newTag: "3-python3.12"
+
+patches:
+  - target:
+      kind: Deployment
+      name: COMPONENT_NAME
+    patch: |-
+      - op: add
+        path: /spec/template/spec/serviceAccountName
+        value: prefect-sa
+      - op: add
+        path: /spec/template/spec/containers/0/envFrom
+        value:
+        - secretRef:
+            name: prefect
