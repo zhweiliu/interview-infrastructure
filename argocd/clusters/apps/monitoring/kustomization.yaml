@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../components/grafana/overlays/common
+  - secret.yaml
+  - service_account.yaml
+
+images:
+  - name: IMAGE_NAME
+    newName: grafana/grafana
+    newTag: "latest"
+
+patches:
+  - target:
+      kind: Deployment
+      name: COMPONENT_NAME
+    patch: |-
+      - op: add
+        path: /spec/template/spec/serviceAccountName
+        value: grafana-sa
+      - op: add
+        path: /spec/template/spec/containers/0/envFrom
+        value:
+        - secretRef:
+            name: grafana
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts
+        value:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+      - op: add
+        path: /spec/template/spec/volumes
+        value:
+        - name: grafana-storage
+          persistentVolumeClaim:
+            claimName: grafana
