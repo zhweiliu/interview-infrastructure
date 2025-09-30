@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: COMPONENT_NAME
+spec:
+  # Service 選擇器，匹配上面 Deployment 的 labels
+  selector:
+    app: COMPONENT_NAME
+  ports:
+    - protocol: TCP
+      port: 8000 # Service 暴露的 Port
+      targetPort: 8000 # 容器的 Port (containerPort)
+      name: metrics-port
+  # 使用 NodePort 可以在集群外部通過任一節點 IP:NodePort 訪問
+  # 也可以使用 LoadBalancer (若 K8s 集群支持) 或 Ingress
+  type: NodePort 

@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../../components/prometheus-prefect-exporter/overlays/common
+  - configmap.yaml
+
+images:
+  - name: IMAGE_NAME
+    newName: prefecthq/prometheus-prefect-exporter
+    newTag: "2.0.1"
+
+patches:
+  - target:
+      kind: Deployment
+      name: prometheus-prefect-exporter
+    patch: |-
+      - op: add
+        path: /spec/template/spec/serviceAccountName
+        value: prefect-sa
+      - op: add
+        path: /spec/template/spec/containers/0/envFrom
+        value:
+        - configMapRef:
+            name: prefect

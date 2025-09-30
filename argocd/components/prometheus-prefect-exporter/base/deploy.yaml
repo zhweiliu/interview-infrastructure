@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: COMPONENT_NAME
+spec:
+  # 您可以根據負載調整 replicas 數量
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: COMPONENT_NAME
+  template:
+    metadata:
+      labels:
+        app: COMPONENT_NAME
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - prometheus-prefect-exporter
+              topologyKey: "kubernetes.io/hostname"
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: cloud.google.com/gke-nodepool
+                    operator: In
+                    values:
+                      - prometheus-prefect-exporter
+      containers:
+      - name: COMPONENT_NAME
+        # 使用您指定的 Prefect 3 映像檔
+        image: IMAGE_NAME
+        # 將 Docker CMD/Entrypoint 轉換為 Kubernetes command/args
+        ports:
+        # 容器內部暴露的 port
+        - containerPort: 8000 
+          name: metrics-port
+        # 推薦配置資源限制，防止單一 Pod 佔用過多資源
+        # resources:
+        #   limits:
+        #     memory: "1Gi"
+        #     cpu: "500m"
+        #   requests:
+        #     memory: "512Mi"
+        #     cpu: "250m"
