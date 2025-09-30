@@ -22,4 +22,4 @@ patches:
         path: /spec/template/spec/containers/0/envFrom
         value:
         - configMapRef:
-            name: prefect
+            name: prometheus-prefect-exporter
