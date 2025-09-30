@@ -5,7 +5,7 @@
 - op: add
   path: /spec/configuration/users
   value:
-    admin/k8s_secret_password: clickhouse/chi-users/ADMIN
+    admin/k8s_secret_password: database/chi-users/ADMIN
     admin/profile: admin
     admin/quota: default
     admin/access_management: 1
@@ -15,7 +15,7 @@
      - 127.0.0.1/32
      - 172.0.0.0/8
      - 10.0.0.0/8
-    grafana/k8s_secret_password: clickhouse/chi-users/GRAFANA
+    grafana/k8s_secret_password: database/chi-users/GRAFANA
     grafana/profile: default
     grafana/quota: default
     grafana/networks/ip:
@@ -23,7 +23,7 @@
      - 127.0.0.1/32
      - 172.0.0.0/8
      - 10.0.0.0/8
-    operator/k8s_secret_password: clickhouse/chi-users/OPERATOR
+    operator/k8s_secret_password: database/chi-users/OPERATOR
     operator/profile: default
     operator/quota: default
     operator/networks/ip:
@@ -31,7 +31,7 @@
      - 127.0.0.1/32
      - 172.0.0.0/8
      - 10.0.0.0/8
-    prefect/k8s_secret_password: clickhouse/chi-users/PREFECT
+    prefect/k8s_secret_password: database/chi-users/PREFECT
     prefect/profile: default
     prefect/quota: default
     prefect/networks/ip:
