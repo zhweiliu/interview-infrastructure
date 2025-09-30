@@ -871,6 +871,10 @@ prometheus:
           static_configs:
             - targets: 
               - prometheus-prefect-exporter.prefect.svc.cluster.local:8000
+        - job_name: 'pushgateway'
+          static_configs:
+            - targets: 
+              - app-prometheus-prometheus-pushgateway.prometheus.svc.cluster.local:9091
         # A scrape configuration for running Prometheus on a Kubernetes cluster.
         # This uses separate scrape configs for cluster components (i.e. API server, node)
         # and services to allow each to use different authentication configs.
