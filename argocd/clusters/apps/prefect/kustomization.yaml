@@ -14,7 +14,7 @@ images:
 patches:
   - target:
       kind: Deployment
-      name: COMPONENT_NAME
+      name: prefect-server
     patch: |-
       - op: add
         path: /spec/template/spec/serviceAccountName
@@ -24,3 +24,14 @@ patches:
         value:
         - secretRef:
             name: prefect
+  - target:
+      kind: Service
+      name: prefect-server
+    patch: |-
+      - op: add
+        path: /spec/ports/-
+        value:
+          protocol: TCP
+          port: 4201
+          targetPort: 4201
+          name: http-metrics
