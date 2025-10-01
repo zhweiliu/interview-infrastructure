@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../../../components/prefect-flow/overlays/online_retail
+
+images:
+  - name: IMAGE_NAME
+    newName: zhweiliu/online_retails_flow
+    newTag: "0153aa9"
+
+patches:
+  - target:
+      kind: CronJob
+      name: online-retail-flow
+    patch: |-
+      - op: replace
+        path: /spec/schedule
+        value: "0 0 * * *"
