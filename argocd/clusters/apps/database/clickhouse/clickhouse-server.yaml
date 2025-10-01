@@ -39,6 +39,14 @@
      - 127.0.0.1/32
      - 172.0.0.0/8
      - 10.0.0.0/8
+    metabase/k8s_secret_password: database/chi-users/METABASE
+    metabase/profile: default
+    metabase/quota: default
+    metabase/networks/ip:
+     - ::1
+     - 127.0.0.1/32
+     - 172.0.0.0/8
+     - 10.0.0.0/8
 
 - op: add
   path: /spec/configuration/profiles
