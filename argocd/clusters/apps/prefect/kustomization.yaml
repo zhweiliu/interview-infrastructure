@@ -4,4 +4,6 @@ kind: Kustomization
 resources:
   - prefect-server
   - prometheus-prefect-exporter
+  - prefect-flow
   - service_account.yaml
+  
