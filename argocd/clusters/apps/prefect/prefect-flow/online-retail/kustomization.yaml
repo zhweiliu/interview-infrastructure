@@ -20,3 +20,8 @@ patches:
       - op: add
         path: /spec/suspend
         value: true
+      - op: add
+        path: /spec/jobTemplate/spec/template/spec/containers/0/envFrom
+        value:
+        - secretRef:
+            name: prefect-flow
