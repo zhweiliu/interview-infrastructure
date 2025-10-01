@@ -17,3 +17,6 @@ patches:
       - op: replace
         path: /spec/schedule
         value: "0 0 * * *"
+      - op: add
+        path: /spec/suspend
+        value: true
