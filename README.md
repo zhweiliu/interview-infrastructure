@@ -1,13 +1,12 @@
-# interview-infrastructure
+# interview-infrastructure: Data Pipeline Execution Environment
 
-本專案示範如何使用 **ArgoCD** 管理 Kubernetes 上的基礎建設與應用程式（包含 ArgoCD 本身）。  
-本地端測試環境使用 [k3d](https://k3d.io/) 建立輕量化的 K3s cluster。 
+本專案使用 **[k3d](https://k3d.io/)** 建立本地 Kubernetes (k8s) 叢集，並透過 **ArgoCD** 實現完整的 **GitOps** 模式。所有基礎設施與應用程式配置 (包含資料庫、排程、監控、視覺化) 均以聲明式 (Declarative) 方式管理。
 
 ## 專案目標
 
-- 採用 **GitOps** 模式集中管理 Kubernetes 資源  
-- 使用 **ArgoCD** 監控 Git Repo，以自動同步資源  
-- 透過 repo 內的 **Helm Chart 與 values.yaml** 定義應用，避免手動安裝
+1.  **GitOps 實現：** 使用 **ArgoCD** 集中管理 Kubernetes 資源，達成環境一鍵部署。
+2.  **核心服務部署：** 部署 **PostgreSQL, ClickHouse, Prefect, Metabase, Prometheus, Grafana** 六大核心服務。
+3.  **環境可重現性：** 確保所有服務的配置和相互連接關係是明確且可驗證的。
 
 ### 專案結構
 
@@ -22,17 +21,6 @@ argocd/
 └── pic : 執行結果的截圖
 ```
 
-### 部署流程
-1. 使用 k3d 建立一個本地 Kubernetes cluster。  
-2. 套用 `argocd/bootstrap/`，在 cluster 上部署並啟動 ArgoCD。  
-3. ArgoCD 啟動後，需要手動套用 `argocd/clusters/apps/applicationset.yaml`。  
-4. ApplicationSet 會自動建立並同步 `argocd/clusters/apps/` 目錄下的應用程式：  
-   - 若為 Helm 應用，ArgoCD 會使用內建的 Helm 功能渲染 `Chart` 與 `values.yaml`。  
-   - 若為純 YAML，則直接套用 manifest。  
-5. 進入 ArgoCD UI，即可檢查應用是否正確同步與部署。
-6. Postgresql 執行初始化 sql 語法
-7. (Optional) 設置 Grafana Dashboard
-
 ---
 
 ## 前置需求
@@ -44,27 +32,17 @@ argocd/
 
 ---
 
-## 建立 Cluster
+## 🚀 部署流程 (End-to-End Deployment)
 
-建立一個名為 `infrastructure` 的 k3d cluster：  
+### 1. 建立 Cluster 與 Node Pool 模擬
+
+建立名為 `infrastructure` 的 k3d cluster，並建立多個 Agent Nodes 以模擬 GKE NodePool，便於後續應用程式使用 $nodeSelector$ 進行部署隔離和資源分配。
 
 ```bash
+# 建立基礎叢集
 k3d cluster create infrastructure
-```
 
-確認 cluster 狀態：
-
-```bash
-kubectl cluster-info
-kubectl get nodes
-```
-
-### 建立所有需要的 k3d node
-
-k3d node 如同 k8s 的 node，是提供掛載 Pod 的機器，而 k3d node 本身也是輕量化的虛擬機。  
-以下示範如何在名為 `infrastructure` 的 cluster 中建立所有需要的 agent nodes：
-
-```bash
+# 建立多個 Agent Nodes 並貼上模擬的 GKE 標籤 (確保服務隔離與親和性)
 k3d node create clickhouse-operator --role agent --cluster infrastructure --k3s-node-label "cloud.google.com/gke-nodepool=clickhouse-operator"
 k3d node create clickhouse-server --role agent --cluster infrastructure --k3s-node-label "cloud.google.com/gke-nodepool=clickhouse" --k3s-node-label "topology.gke.io/zone=asia-east1-a"
 k3d node create prometheus --role agent --cluster infrastructure --k3s-node-label "cloud.google.com/gke-nodepool=prometheus"
@@ -74,93 +52,69 @@ k3d node create grafana --role agent --cluster infrastructure --k3s-node-label "
 k3d node create prefect --role agent --cluster infrastructure --k3s-node-label "cloud.google.com/gke-nodepool=prefect"
 k3d node create prometheus-prefect-exporter --role agent --cluster infrastructure --k3s-node-label "cloud.google.com/gke-nodepool=prometheus-prefect-exporter"
 k3d node create prefect-work-pool --role agent --cluster infrastructure --k3s-node-label "cloud.google.com/gke-nodepool=prefect-work-pool"
+
+# 驗證所有 Node 狀態
+kubectl get nodes
 ```
 
-> ✅ 驗證點：使用 kubectl get nodes 可以看到所有建立的 node，狀態應為 Ready。
+### 2. 部署 ArgoCD 與啟動 GitOps
 
----
-
-## 部署 ArgoCD
-
-ArgoCD 相關資源定義於本 repo：
-
-- `argocd/bootstrap/`：ArgoCD 安裝與基礎設定  
-- `argocd/clusters/apps/applicationset.yaml`：定義 ApplicationSet，會自動同步 `argocd/clusters/apps/` 目錄下的應用
-
-### 安裝 ArgoCD：
+手動部署 ArgoCD 本身後，即可將整個應用程式清單交由 GitOps 管理。
 
 ```bash
+# 2.1 安裝 ArgoCD (使用 Kustomize 安裝)
 kubectl apply -k argocd/bootstrap/
-```
 
----
-
-## 存取 ArgoCD UI
-
-取得初始密碼：
-
-```bash
-kubectl get secret argocd-initial-admin-secret -n argocd \
-  -o jsonpath="{.data.password}" | base64 -d
-```
-
-透過 port-forward 存取 UI：
-
-```bash
-kubectl port-forward svc/argocd-server -n argocd 8080:443
-```
-
-開啟瀏覽器，進入 [https://localhost:8080](https://localhost:8080)，  
-使用帳號 `admin` 與上一步取得的密碼登入。
-
----
-
-## 部署 Applications
-
-`argocd/clusters/apps/applicationset.yaml`：定義 ApplicationSet，會自動同步 `argocd/clusters/apps/` 目錄下的應用
-
-因此在 namespace `argocd` 部署 `applicationset.ymal` 檔案即可
-
-```bash
+# 2.2 部署 Applicationset (啟動 GitOps 流程)
+# ApplicationSet 會自動同步 argocd/clusters/apps/ 目錄下所有應用
 kubectl apply -k argocd/clusters/apps/applicationset.yaml
 ```
 
+### 3. 存取 ArgoCD UI
+
+```bash
+# 取得初始密碼
+kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 -d
+
+# 透過 port-forward 存取 UI
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+開啟瀏覽器，進入 [https://localhost:8080](https://localhost:8080)，使用帳號 admin 登入。
+
 ---
 
-## PostgreSQL 資料庫初始化 (`init.sql`)
+## ⚙️ 核心服務連接與配置管理 (IaC & Secrets)
 
-在初始化 PostgreSQL 資料庫之前，需要先建立本地到 cluster 的連線
+所有服務的連接參數 (資料庫連線字串、API Key 等) 均由 $ArgoCD$ 讀取 $argocd/clusters/apps/$ 目錄下的 **Secret** 和 **ConfigMap** 資源，並注入到 $Deployment$ 的環境變數中，確保 IaC 的安全性與一致性。
 
-### 建立 port-forward
+### 1. 資料庫連接與職責
 
-```bash
-kubectl get svc -n database
-# NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
-# chi-chi-standard-shard-0-0   ClusterIP   None            <none>        9000/TCP,8123/TCP,9009/TCP   3d18h
-# metabase                     ClusterIP   10.43.134.142   <none>        8300/TCP                     3d17h
-# postgresql                   ClusterIP   10.43.125.74    <none>        5432/TCP                     3d18h
-# service-chi                  ClusterIP   10.43.197.99    <none>        8123/TCP,9000/TCP            3d18h
-# service-standard             ClusterIP   10.43.47.116    <none>        8123/TCP,9000/TCP            3d18h
+整個環境依賴於兩個資料庫，職責明確區分：
 
-# port-forward
-kubectl port-forward service/postgresql 5432:5432 -n database
-```
+| 資料庫 | 職責 | 連接服務 | K8s Secret/ConfigMap 依賴 |
+| :--- | :--- | :--- | :--- |
+| **PostgreSQL** | 應用程式組態 (Metadata) | Prefect, Metabase | `postgresql-credentials` |
+| **ClickHouse** | 交易數據倉儲 (OLAP) | Prefect Agent, Grafana | `clickhouse-credentials` |
 
-### 透過 DB 工具執行 sql 語法
+### 2. 資料庫初始化 (Initialization)
 
-使用任意 DB Tool 連線到 postgresql( 推薦 **[DBeaver](https://dbeaver.io/)** )
+$ArgoCD$ 負責部署 $DB$ 實例，但 $Schema$ 初始化需透過 $Job$ 或手動執行。
 
-```bash
-# 此處 postgresql 預設的 superuser 帳號密碼如下
-帳號: admin
-密碼: admin
-```
+| 資料庫 | 初始化 $SQL$ 路徑 | 初始化目的 |
+| :--- | :--- | :--- |
+| **PostgreSQL** | `argocd/clusters/apps/database/postgresql/init.sql` | 建立 $Prefect$ 和 $Metabase$ 專用的 $database/schema$。 |
+| **ClickHouse** | **(來自 interview-pipeline 專案)** | 建立 $raw, vault, marts, quality$ 四個資料庫。 |
 
-登入後在 postgresql 上執行初始化 sql 
-```bash
-# 初始化 sql 檔案位置
-argocd/clusters/apps/database/postgresql/init.sql
-```
+> **PostgreSQL 初始化步驟:**
+> 1. 執行 `kubectl port-forward service/postgresql 5432:5432 -n database` 建立連線。
+> 2. 使用 DB 工具 (如 DBeaver) 連線並執行 $init.sql$ 腳本。
+
+### 3. 監控配置 (Grafana & Prometheus)
+
+* **Prometheus**: $Deployment$ 中配置 $ServiceMonitor$ 資源，自動發現並抓取 $Prefect$ (flow metrics) 和 $ClickHouse$ 的 $Metrics$ $Endpoint$。
+* **Grafana**: 透過 $Provisioning$ $ConfigMap$：
+    * 預先設置 **ClickHouse** 為 $DataSource$，用於視覺化 $Marts$ 層數據。
+    * 預先設置 **Prometheus** 為 $DataSource$，用於視覺化 $notification.py$ 腳本發送的 $ETL$ 品質指標。
 
 ---
 
